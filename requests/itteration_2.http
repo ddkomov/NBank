@@ -1,0 +1,33 @@
+### Positive test: User can deposit money 0, 0.5, 1, 4999, 4999.5, 5000
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+{
+  "id": 2,
+  "balance": 0
+}
+
+### Negative test: User can not deposit money -1, 0, null, 5001, 5000,5
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+{
+  "id": 2,
+  "balance": 5000.50
+}
+
+
+### Negative test: User can not deposit money on account that were not registered, or not yours
+### Поменять айди счета, на несуществующий
+### Меняя токен авторизации мы меняем пренадлежность юзера к созданному счету, если на токене счет не создан, то депозит туда невозможен,
+### поэтому достаточно только проверки на смену айди счета. Т.Е. система не дает никак по апи сделать депозит на счет другого токена, если мы авторизовались под другим.
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+{
+  "id": 2,
+  "balance": 5000.50
+}

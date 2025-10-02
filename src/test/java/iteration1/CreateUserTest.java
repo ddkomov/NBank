@@ -1,60 +1,43 @@
 package iteration1;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
+import generators.RandomData;
+import generators.RandomModelGenerator;
+import models.CreateUserRequest;
+import models.CreateUserResponse;
+import models.UserRole;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import requests.Endpoint;
+import requests.skeleton.requesters.CrudRequester;
+import requests.skeleton.requesters.ValidatedCrudRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
-import java.util.List;
 import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
 
-public class CreateUserTest {
-    @BeforeAll
-    public static void setup() {
-        RestAssured.filters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
+public class CreateUserTest extends BaseTest {
 
-    }
-    public static Stream<Arguments> userValidData() {
-        return Stream.of(
-                //username field validation
-                Arguments.of("user3-_.", "Password33$", "USER"));
 
-    }
-    @MethodSource("userValidData")
-    @ParameterizedTest
-    public void adminCanCreateUserWithValidData(String username, String password, String role) {
-        String body = String.format("""
-                        {
-                                  "username": "%s",
-                                  "password": "%s",
-                                  "role": "%s"
-                                }
-                """, username, password, role);
-        given().
-                contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(body)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED)
-                .body("username",equalTo(username))
-                .body("password",not(equalTo(password)))
-                .body("role",equalTo(role));
+    @Test
+    public void adminCanCreateUserWithValidData() {
+        CreateUserRequest createUserRequest =
+                RandomModelGenerator.generate(CreateUserRequest.class);
+
+        CreateUserResponse createUserResponse = new ValidatedCrudRequester<CreateUserResponse>
+                (RequestSpecs.adminSpec(),
+                        Endpoint.ADMIN_USER,
+                        ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+
+        ModelAssertions.assertThatModels(createUserRequest, createUserResponse).match();
 
     }
+
     public static Stream<Arguments> userInvalidData() {
         return Stream.of(
                 //username field validation
@@ -69,23 +52,17 @@ public class CreateUserTest {
     @MethodSource("userInvalidData")
     @ParameterizedTest
     public void adminCanNotCreateUserWithInvalidData(String username, String password, String role, String errorKey, String errorValue) {
-        String body = String.format("""
-                        {
-                                  "username": "%s",
-                                  "password": "%s",
-                                  "role": "%s"
-                                }
-                """, username, password, role);
-        given().
-                contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(body)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(errorKey, equalTo(errorValue));
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
+
+        new CrudRequester(RequestSpecs.adminSpec(),
+                Endpoint.ADMIN_USER,
+                ResponseSpecs.requestReturnsBadRequest(errorKey, errorValue))
+                .post(createUserRequest);
+
 
     }
 }

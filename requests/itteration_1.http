@@ -4,7 +4,7 @@ Content-Type: application/json
 Authorization: Basic YWRtaW46YWRtaW4=
 
 {
-  "username": "kate19981",
+  "username": "kate1",
   "password": "verysTRongPassword33$",
   "role": "USER"
 }
@@ -15,19 +15,19 @@ POST http://localhost:4111/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "username": "kate19981",
+  "username": "kate1",
   "password": "verysTRongPassword33$"
 }
 
 ### Positive test: Authorized user can create account
 POST http://localhost:4111/api/v1/accounts
 Content-Type: application/json
-Authorization: Basic a2F0ZTE5OTgxOnZlcnlzVFJvbmdQYXNzd29yZDMzJA==
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
 
 ### Positive test: check account was created
 GET http://localhost:4111/api/v1/customer/accounts
 Content-Type: application/json
-Authorization: Basic a2F0ZTE5OTgxOnZlcnlzVFJvbmdQYXNzd29yZDMzJA==
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
 
 
 
@@ -40,8 +40,8 @@ Content-Type: application/json
 Authorization: Basic YWRtaW46YWRtaW4=
 
 {
-  "username": "  ",
-  "password": "verysTRongPassword33$",
+  "username": "kate299811",
+  "password": "kate19981$Q",
   "role": "USER"
 }
 
