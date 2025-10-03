@@ -15,7 +15,7 @@ public class AdminSteps {
 
 
         //создание пользователя
-        return new ValidatedCrudRequester<CreateUserResponse>(
+        new ValidatedCrudRequester<CreateUserResponse>(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_USER,
                 ResponseSpecs.entityWasCreated())
