@@ -23,7 +23,10 @@ public enum Endpoint {
             "/accounts",
             BaseModel.class,
             CreateAccountResponse.class
-    );
+    ),
+    DEPOSITS("/accounts/deposit",
+            DepositRequest.class,
+            DepositResponse.class);
 
 
     private final String url;

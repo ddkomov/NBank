@@ -16,6 +16,4 @@ public abstract class HttpRequest {
         this.endpoint = endpoint;
         this.responseSpecification = responseSpecification;
     }
-
-    public abstract ValidatableResponse update(long id, BaseModel model);
 }

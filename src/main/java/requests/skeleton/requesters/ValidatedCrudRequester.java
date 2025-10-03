@@ -29,12 +29,14 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Void delete(long id) {
         crudRequester.delete(id).extract().jsonPath(); // Можно добавить проверку статуса
         return null;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T update(long id, BaseModel model) {
         return (T) crudRequester.update(id, model).extract().as(endpoint.getResponseModel());
     }
