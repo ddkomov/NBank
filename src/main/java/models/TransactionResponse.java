@@ -5,11 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.ZonedDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DepositRequest extends BaseModel {
+public class TransactionResponse extends BaseModel {
     private long id;
-    private Double balance;
+    private String type;
+    private String timestamp;
+    private double amount;
+    private long relatedAccountId;
 }

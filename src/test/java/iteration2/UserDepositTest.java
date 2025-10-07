@@ -4,6 +4,7 @@ import generators.RandomModelGenerator;
 import iteration1.BaseTest;
 import models.*;
 import models.comparison.ModelAssertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,6 +16,7 @@ import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 public class UserDepositTest extends BaseTest {
@@ -51,7 +53,7 @@ public class UserDepositTest extends BaseTest {
 
         // Шаг 2: Создаем аккаунт для пользователя
 
-        ValidatedCrudRequester<CreateAccountResponse> accountRequester =
+        ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 userRequest.getUsername(),
@@ -60,7 +62,7 @@ public class UserDepositTest extends BaseTest {
                         ResponseSpecs.entityWasCreated()
                 );
 
-        CreateAccountResponse createdAccount = accountRequester.post(userRequest);
+        CreateAccountResponse createdAccount = createAccountRequester.post(userRequest);
         // Шаг 3: Делаем депозит на созданный аккаунт
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(createdAccount.getId());
@@ -77,8 +79,22 @@ public class UserDepositTest extends BaseTest {
 
         DepositResponse depositResponse = depositRequester.post(depositRequest);
 
-        // Шаг 4: Проверяем результат
-        ModelAssertions.assertThatModels(depositRequest, depositResponse).match();
+        // Шаг 4: Проверяем, что баланс изменился через GET-запрос
+        // Выполняем GET-запрос к /api/v1/customer/accounts
+        ValidatedCrudRequester<AccountResponse> accountRequester =
+                new ValidatedCrudRequester<>(
+                        RequestSpecs.authAsUser(
+                                userRequest.getUsername(),
+                                userRequest.getPassword()),
+                        Endpoint.CUSTOMERS_ACCOUNT,
+                        ResponseSpecs.requestReturnsOK()
+                );
+        //Достаем счет из массива
+        List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
+        AccountResponse firstAccount = accounts.get(0);
+
+        // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
+        Assertions.assertThat(firstAccount.getBalance()).isEqualTo(depositResponse.getBalance());
     }
 
     @MethodSource("amountsInvalid")
@@ -89,7 +105,7 @@ public class UserDepositTest extends BaseTest {
 
         // Шаг 2: Создаем аккаунт для пользователя
 
-        ValidatedCrudRequester<CreateAccountResponse> accountRequester =
+        ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 userRequest.getUsername(),
@@ -98,25 +114,41 @@ public class UserDepositTest extends BaseTest {
                         ResponseSpecs.entityWasCreated()
                 );
 
-        CreateAccountResponse createdAccount = accountRequester.post(userRequest);
+        CreateAccountResponse createdAccount = createAccountRequester.post(userRequest);
         // Шаг 3: Делаем депозит на созданный аккаунт
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(createdAccount.getId());
-        depositRequest.setBalance(amount != null ? amount : 0.0);
+        depositRequest.setBalance(/*amount != null ? amount : 0.0*/amount);
 
-        ValidatedCrudRequester<DepositResponse> depositRequester =
+
+        new CrudRequester(
+                RequestSpecs.authAsUser(
+                        userRequest.getUsername(),
+                        userRequest.getPassword()),
+                Endpoint.DEPOSITS,
+                amount != null
+                        ? ResponseSpecs.requestReturnsBR()
+                        : ResponseSpecs.requestReturnsIternalServerError()
+
+        ).post(depositRequest);
+
+
+        // Шаг 4: Проверяем, что баланс изменился через GET-запрос
+        // Выполняем GET-запрос к /customer/accounts
+        ValidatedCrudRequester<AccountResponse> accountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 userRequest.getUsername(),
                                 userRequest.getPassword()),
-                        Endpoint.DEPOSITS,
+                        Endpoint.CUSTOMERS_ACCOUNT,
                         ResponseSpecs.requestReturnsOK()
                 );
+        //Достаем счет из массива
+        List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
+        AccountResponse firstAccount = accounts.get(0);
 
-        DepositResponse depositResponse = depositRequester.post(depositRequest);
-
-        // Шаг 4: Проверяем результат
-        ModelAssertions.assertThatModels(depositRequest, depositResponse).match();
+        // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
+        Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
     }
 
     @Test
@@ -125,7 +157,7 @@ public class UserDepositTest extends BaseTest {
         CreateUserRequest user1Request = AdminSteps.createUser();
 
         // Шаг 2: Создаем аккаунт для user1
-        ValidatedCrudRequester<CreateAccountResponse> accountRequester =
+        ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 user1Request.getUsername(),
@@ -134,39 +166,50 @@ public class UserDepositTest extends BaseTest {
                         ResponseSpecs.entityWasCreated()
                 );
 
-        CreateAccountResponse createdAccount = accountRequester.post(user1Request);
+        CreateAccountResponse createdAccount = createAccountRequester.post(user1Request);
 
         // Шаг 3: Создаем пользователя user2
         CreateUserRequest user2Request = AdminSteps.createUser();
 
         // Шаг 4: Пытаемся сделать депозит на счёт user1 от имени user2
+        // Выполняем депозит и проверяем, что запрос завершился ошибкой
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(createdAccount.getId());
         depositRequest.setBalance(100.0);
 
-        ValidatedCrudRequester<DepositResponse> depositRequester =
+        new CrudRequester(
+                RequestSpecs.authAsUser(
+                        user2Request.getUsername(),
+                        user2Request.getPassword()),
+                Endpoint.DEPOSITS,
+                ResponseSpecs.requestReturnsForbidden() // Ожидаем ошибку доступа
+        ).post(depositRequest);
+        // Шаг 5: Проверяем, что баланс изменился через GET-запрос
+        // Выполняем GET-запрос к /customer/accounts
+        ValidatedCrudRequester<AccountResponse> accountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
-                                user2Request.getUsername(),
-                                user2Request.getPassword()),
-                        Endpoint.DEPOSITS,
-                        ResponseSpecs.requestReturnsForbidden() // Ожидаем ошибку доступа
+                                user1Request.getUsername(),
+                                user1Request.getPassword()),
+                        Endpoint.CUSTOMERS_ACCOUNT,
+                        ResponseSpecs.requestReturnsOK()
                 );
+        //Достаем счет из массива
+        List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
+        AccountResponse firstAccount = accounts.get(0);
 
-        // Выполняем депозит и проверяем, что запрос завершился ошибкой
-        try {
-            depositRequester.post(depositRequest);
-        } catch (Exception e) {
-            // Если сервер вернул ошибку, это нормально
-        }
+        // Шаг 6: Проверяем, что баланс увеличился на сумму депозита
+        Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
+
+
     }
+
     @Test
     public void userCannotDepositOnNonExistentAccount() {
         // Шаг 1: Создаем пользователя user1
         CreateUserRequest user1Request = AdminSteps.createUser();
-
         // Шаг 2: Создаем аккаунт для user1
-        ValidatedCrudRequester<CreateAccountResponse> accountRequester =
+        ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 user1Request.getUsername(),
@@ -174,26 +217,35 @@ public class UserDepositTest extends BaseTest {
                         Endpoint.ACCOUNTS,
                         ResponseSpecs.entityWasCreated()
                 );
-        CreateAccountResponse createdAccount = accountRequester.post(user1Request);
+        CreateAccountResponse createdAccount = createAccountRequester.post(user1Request);
         // Шаг 3: Пытаемся сделать депозит на несуществующий счёт
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(999); // Несуществующий ID
-        depositRequest.setBalance(100);
+        depositRequest.setBalance(100.0);
 
-        ValidatedCrudRequester<DepositResponse> depositRequester =
+        new CrudRequester(
+                RequestSpecs.authAsUser(
+                        user1Request.getUsername(),
+                        user1Request.getPassword()),
+                Endpoint.DEPOSITS,
+                ResponseSpecs.requestReturnsNotFound() // ???? Ожидаем ошибку 404, но почему-то 403
+        ).post(depositRequest);
+        // Шаг 4: Проверяем, что баланс изменился через GET-запрос
+        // Выполняем GET-запрос к /customer/accounts
+        ValidatedCrudRequester<AccountResponse> accountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
                                 user1Request.getUsername(),
                                 user1Request.getPassword()),
-                        Endpoint.DEPOSITS,
-                        ResponseSpecs.requestReturnsNotFound() // Ожидаем ошибку 404, но почему-то 403
+                        Endpoint.CUSTOMERS_ACCOUNT,
+                        ResponseSpecs.requestReturnsOK()
                 );
+        //Достаем счет из массива
+        List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
+        AccountResponse firstAccount = accounts.get(0);
 
-        // Выполняем депозит и проверяем, что запрос завершился ошибкой
-        try {
-            depositRequester.post(depositRequest);
-        } catch (Exception e) {
-            // Если сервер вернул ошибку, это нормально
-        }
+        // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
+        Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
+
     }
 }

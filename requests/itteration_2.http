@@ -1,11 +1,11 @@
 ### Positive test: User can deposit money 0, 0.5, 1, 4999, 4999.5, 5000
 POST http://localhost:4111/api/v1/accounts/deposit
 Content-Type: application/json
-Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+Authorization: Basic eXk2d0ppSm9XNzBrVGs6V0tXaG93djA1MiUkXQ==
 
 {
-  "id": 2,
-  "balance": 0
+  "id": 18,
+  "balance": 5000.0
 }
 
 ### Negative test: User can not deposit money -1, 0, null, 5001, 5000,5
@@ -31,3 +31,9 @@ Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
   "id": 2,
   "balance": 5000.50
 }
+
+### Positive test: Retrieve all transactions of the user's account.
+GET http://localhost:4111/api/v1/accounts/18/transactions
+Content-Type: application/json
+Authorization: Basic eXk2d0ppSm9XNzBrVGs6V0tXaG93djA1MiUkXQ==
+
