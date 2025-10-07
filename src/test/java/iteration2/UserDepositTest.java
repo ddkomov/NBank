@@ -50,9 +50,7 @@ public class UserDepositTest extends BaseTest {
     public void userCanDepositValidAmountOfMoney(double amount) {
         // Шаг 1: Создаем пользователя через Admin
         CreateUserRequest userRequest = AdminSteps.createUser();
-
         // Шаг 2: Создаем аккаунт для пользователя
-
         ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
@@ -61,7 +59,6 @@ public class UserDepositTest extends BaseTest {
                         Endpoint.ACCOUNTS,
                         ResponseSpecs.entityWasCreated()
                 );
-
         CreateAccountResponse createdAccount = createAccountRequester.post(userRequest);
         // Шаг 3: Делаем депозит на созданный аккаунт
         DepositRequest depositRequest = new DepositRequest();
@@ -76,9 +73,7 @@ public class UserDepositTest extends BaseTest {
                         Endpoint.DEPOSITS,
                         ResponseSpecs.requestReturnsOK()
                 );
-
         DepositResponse depositResponse = depositRequester.post(depositRequest);
-
         // Шаг 4: Проверяем, что баланс изменился через GET-запрос
         // Выполняем GET-запрос к /api/v1/customer/accounts
         ValidatedCrudRequester<AccountResponse> accountRequester =
@@ -92,7 +87,6 @@ public class UserDepositTest extends BaseTest {
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
         AccountResponse firstAccount = accounts.get(0);
-
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(depositResponse.getBalance());
     }
@@ -102,9 +96,7 @@ public class UserDepositTest extends BaseTest {
     public void userCanNotDepositInvalidAmountOfMoney(Double amount) {
         // Шаг 1: Создаем пользователя через Admin
         CreateUserRequest userRequest = AdminSteps.createUser();
-
         // Шаг 2: Создаем аккаунт для пользователя
-
         ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
                         RequestSpecs.authAsUser(
@@ -120,7 +112,6 @@ public class UserDepositTest extends BaseTest {
         depositRequest.setId(createdAccount.getId());
         depositRequest.setBalance(/*amount != null ? amount : 0.0*/amount);
 
-
         new CrudRequester(
                 RequestSpecs.authAsUser(
                         userRequest.getUsername(),
@@ -131,8 +122,6 @@ public class UserDepositTest extends BaseTest {
                         : ResponseSpecs.requestReturnsIternalServerError()
 
         ).post(depositRequest);
-
-
         // Шаг 4: Проверяем, что баланс изменился через GET-запрос
         // Выполняем GET-запрос к /customer/accounts
         ValidatedCrudRequester<AccountResponse> accountRequester =
@@ -146,7 +135,6 @@ public class UserDepositTest extends BaseTest {
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
         AccountResponse firstAccount = accounts.get(0);
-
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
     }
@@ -155,7 +143,6 @@ public class UserDepositTest extends BaseTest {
     public void userCannotDepositOnOtherUsersAccount() {
         // Шаг 1: Создаем пользователя user1
         CreateUserRequest user1Request = AdminSteps.createUser();
-
         // Шаг 2: Создаем аккаунт для user1
         ValidatedCrudRequester<CreateAccountResponse> createAccountRequester =
                 new ValidatedCrudRequester<>(
@@ -167,10 +154,8 @@ public class UserDepositTest extends BaseTest {
                 );
 
         CreateAccountResponse createdAccount = createAccountRequester.post(user1Request);
-
         // Шаг 3: Создаем пользователя user2
         CreateUserRequest user2Request = AdminSteps.createUser();
-
         // Шаг 4: Пытаемся сделать депозит на счёт user1 от имени user2
         // Выполняем депозит и проверяем, что запрос завершился ошибкой
         DepositRequest depositRequest = new DepositRequest();
@@ -197,7 +182,6 @@ public class UserDepositTest extends BaseTest {
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
         AccountResponse firstAccount = accounts.get(0);
-
         // Шаг 6: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
 
@@ -243,9 +227,7 @@ public class UserDepositTest extends BaseTest {
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
         AccountResponse firstAccount = accounts.get(0);
-
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
-
     }
 }
