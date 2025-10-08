@@ -86,7 +86,7 @@ public class UserDepositTest extends BaseTest {
                 );
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
-        AccountResponse firstAccount = accounts.get(0);
+        AccountResponse firstAccount = accounts.getFirst();
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(depositResponse.getBalance());
     }
@@ -134,13 +134,13 @@ public class UserDepositTest extends BaseTest {
                 );
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
-        AccountResponse firstAccount = accounts.get(0);
+        AccountResponse firstAccount = accounts.getFirst();
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
     }
-
-    @Test
-    public void userCannotDepositOnOtherUsersAccount() {
+    @MethodSource("amountsValid")
+    @ParameterizedTest
+    public void userCannotDepositOnOtherUsersAccount(double amount) {
         // Шаг 1: Создаем пользователя user1
         CreateUserRequest user1Request = AdminSteps.createUser();
         // Шаг 2: Создаем аккаунт для user1
@@ -160,7 +160,7 @@ public class UserDepositTest extends BaseTest {
         // Выполняем депозит и проверяем, что запрос завершился ошибкой
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(createdAccount.getId());
-        depositRequest.setBalance(100.0);
+        depositRequest.setBalance(amount);
 
         new CrudRequester(
                 RequestSpecs.authAsUser(
@@ -181,15 +181,15 @@ public class UserDepositTest extends BaseTest {
                 );
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
-        AccountResponse firstAccount = accounts.get(0);
+        AccountResponse firstAccount = accounts.getFirst();
         // Шаг 6: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
 
 
     }
-
-    @Test
-    public void userCannotDepositOnNonExistentAccount() {
+    @MethodSource("amountsValid")
+    @ParameterizedTest
+    public void userCannotDepositOnNonExistentAccount(double amount) {
         // Шаг 1: Создаем пользователя user1
         CreateUserRequest user1Request = AdminSteps.createUser();
         // Шаг 2: Создаем аккаунт для user1
@@ -205,7 +205,7 @@ public class UserDepositTest extends BaseTest {
         // Шаг 3: Пытаемся сделать депозит на несуществующий счёт
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setId(999); // Несуществующий ID
-        depositRequest.setBalance(100.0);
+        depositRequest.setBalance(amount);
 
         new CrudRequester(
                 RequestSpecs.authAsUser(
@@ -226,7 +226,7 @@ public class UserDepositTest extends BaseTest {
                 );
         //Достаем счет из массива
         List<AccountResponse> accounts = accountRequester.getAsList(null, AccountResponse.class);
-        AccountResponse firstAccount = accounts.get(0);
+        AccountResponse firstAccount = accounts.getFirst();
         // Шаг 5: Проверяем, что баланс увеличился на сумму депозита
         Assertions.assertThat(firstAccount.getBalance()).isEqualTo(0.0);
     }
