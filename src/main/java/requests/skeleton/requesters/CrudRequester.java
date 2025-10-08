@@ -29,11 +29,26 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface 
     }
 
     @Override
-    public ValidatableResponse get(long id) {
+    public ValidatableResponse get(Long id) {
+        String url = endpoint.getUrl();
+
+//        // Проверяем, есть ли в URL шаблон вида {xxx}
+//        if (url.contains("{")) {
+//            // Ищем первый шаблон {xxx} и заменяем его на id
+//            String pattern = url.replaceAll("^.*?\\{([^}]*)\\}.*?$", "$1"); // Извлекаем имя параметра
+//            url = url.replaceFirst("\\{[^}]*\\}", String.valueOf(id));
+//        } else {
+//            // Если нет шаблона — добавляем /{id} в конец
+//            url += "/{id}";
+//        }
+
+        if (id != null && url.contains("{")) {
+            url = url.replaceFirst("\\{[^}]*\\}", String.valueOf(id));
+        }
+
         return given()
                 .spec(requestSpecification)
-                .pathParam("id", id)
-                .get(endpoint.getUrl() + "/{id}")
+                .get(url)
                 .then()
                 .assertThat()
                 .spec(responseSpecification);

@@ -32,7 +32,11 @@ public class ResponseSpecs {
                 .expectBody(errorKey, equalTo(errorValue))
                 .build();
     }
-
+    public static ResponseSpecification requestReturnsBR() {
+        return deafultResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .build();
+    }
     public static ResponseSpecification requestReturnsForbidden() {
         return deafultResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_FORBIDDEN)
@@ -41,6 +45,17 @@ public class ResponseSpecs {
     public static ResponseSpecification requestReturnsNotFound() {
         return deafultResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_NOT_FOUND)
+                .build();
+    }
+    public static ResponseSpecification requestReturnsIternalServerError() {
+        return deafultResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+                .build();
+    }
+    public static ResponseSpecification requestReturnsBadRequestWithMessage(String message) {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .expectBody(equalTo(message))
                 .build();
     }
 }

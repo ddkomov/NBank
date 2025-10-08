@@ -24,6 +24,16 @@ public enum Endpoint {
             BaseModel.class,
             CreateAccountResponse.class
     ),
+    CUSTOMERS_ACCOUNT(
+            "/customer/accounts",
+            BaseModel.class,
+            AccountResponse.class
+    ),
+    ACCOUNTS_TRANSACTIONS(
+            "/accounts/{accountId}/transactions",
+            BaseModel.class,
+            AccountResponse.class
+    ),
     DEPOSITS("/accounts/deposit",
             DepositRequest.class,
             DepositResponse.class);
@@ -32,4 +42,6 @@ public enum Endpoint {
     private final String url;
     private final Class<? extends BaseModel> requestModel;
     private final Class<? extends BaseModel> responseModel;
+
+
 }
