@@ -22,7 +22,7 @@ Content-Type: application/json
 ### Positive test: Authorized user can create account
 POST http://localhost:4111/api/v1/accounts
 Content-Type: application/json
-Authorization: Basic eXk2d0ppSm9XNzBrVGs6V0tXaG93djA1MiUkXQ==
+Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
 
 ### Positive test: check account was created
 GET http://localhost:4111/api/v1/customer/accounts

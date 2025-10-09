@@ -34,6 +34,11 @@ public enum Endpoint {
             BaseModel.class,
             AccountResponse.class
     ),
+    ACCOUNTS_TRANSFER(
+            "/accounts/transfer",
+            BaseModel.class,
+            TransferResponse.class
+    ),
     DEPOSITS("/accounts/deposit",
             DepositRequest.class,
             DepositResponse.class);
