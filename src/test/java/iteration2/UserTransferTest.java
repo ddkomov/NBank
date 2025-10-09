@@ -23,7 +23,6 @@ public class UserTransferTest extends BaseTest {
 
     public static Stream<Arguments> amountsValid() {
         return Stream.of(
-
                 Arguments.of(0.1),
                 Arguments.of(0.5),
                 Arguments.of(1.0),
@@ -35,7 +34,6 @@ public class UserTransferTest extends BaseTest {
 
     public static Stream<Arguments> amountsInvalid() {
         return Stream.of(
-
                 Arguments.of(0.1, -0.1),
                 Arguments.of(1.0, 0.0),
                 Arguments.of(10001.0, 10001.0),
