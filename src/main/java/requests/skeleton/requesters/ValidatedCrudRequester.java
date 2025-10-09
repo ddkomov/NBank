@@ -42,8 +42,8 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
 
     @Override
     @SuppressWarnings("unchecked")
-    public T update(long id, BaseModel model) {
-        return (T) crudRequester.update(id, model).extract().as(endpoint.getResponseModel());
+    public T put(BaseModel model) {
+        return (T) crudRequester.put(model).extract().as(endpoint.getResponseModel());
     }
 
     public <R> List<R> getAsList(Long id, Class<R> itemType) {

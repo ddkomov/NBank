@@ -51,3 +51,17 @@ Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
 GET http://localhost:4111/api/v1/customer/accounts
 Content-Type: application/json
 Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
+
+### Positive test: Retrieves the authenticated user's profile details.
+GET http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+### Positive test: Retrieves the authenticated user's profile details.
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+{
+  "name": "New Name1"
+}
