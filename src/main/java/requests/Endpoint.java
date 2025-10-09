@@ -29,10 +29,20 @@ public enum Endpoint {
             BaseModel.class,
             AccountResponse.class
     ),
+    CUSTOMERS_PROFILE(
+            "/customer/profile",
+            BaseModel.class,
+            CreateUserResponse.class
+    ),
     ACCOUNTS_TRANSACTIONS(
             "/accounts/{accountId}/transactions",
             BaseModel.class,
             AccountResponse.class
+    ),
+    ACCOUNTS_TRANSFER(
+            "/accounts/transfer",
+            BaseModel.class,
+            TransferResponse.class
     ),
     DEPOSITS("/accounts/deposit",
             DepositRequest.class,

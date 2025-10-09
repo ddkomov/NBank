@@ -3,12 +3,14 @@ package requests.skeleton.requesters;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
+import models.AccountResponse;
 import models.BaseModel;
 import requests.Endpoint;
 import requests.skeleton.HttpRequest;
 import requests.skeleton.interfaces.CrudEndpointInterface;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest implements CrudEndpointInterface {
     private CrudRequester crudRequester;
@@ -40,11 +42,12 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
 
     @Override
     @SuppressWarnings("unchecked")
-    public T update(long id, BaseModel model) {
-        return (T) crudRequester.update(id, model).extract().as(endpoint.getResponseModel());
+    public T put(BaseModel model) {
+        return (T) crudRequester.put(model).extract().as(endpoint.getResponseModel());
     }
 
     public <R> List<R> getAsList(Long id, Class<R> itemType) {
         return crudRequester.get(id).extract().jsonPath().getList("", itemType);
     }
+
 }
