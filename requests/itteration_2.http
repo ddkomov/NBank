@@ -8,6 +8,11 @@ Authorization: Basic eXk2d0ppSm9XNzBrVGs6V0tXaG93djA1MiUkXQ==
   "balance": 5000.0
 }
 
+### Positive test: Retrieve all transactions of the user's account.
+GET http://localhost:4111/api/v1/accounts/18/transactions
+Content-Type: application/json
+Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
+
 ### Negative test: User can not deposit money -1, 0, null, 5001, 5000,5
 POST http://localhost:4111/api/v1/accounts/deposit
 Content-Type: application/json
@@ -17,7 +22,6 @@ Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
   "id": 2,
   "balance": 5000.50
 }
-
 
 ### Negative test: User can not deposit money on account that were not registered, or not yours
 ### Поменять айди счета, на несуществующий
@@ -32,8 +36,32 @@ Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
   "balance": 5000.50
 }
 
-### Positive test: Retrieve all transactions of the user's account.
-GET http://localhost:4111/api/v1/accounts/18/transactions
+### Positive test: Transfers money from one account to another 0, 0.5, 1, 9999, 9999.5, 10000
+POST http://localhost:4111/api/v1/accounts/transfer
 Content-Type: application/json
-Authorization: Basic eXk2d0ppSm9XNzBrVGs6V0tXaG93djA1MiUkXQ==
+Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
 
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 7,
+  "amount": 0.1
+}
+
+### Positive test: Retrieves all accounts belonging to the authenticated user
+GET http://localhost:4111/api/v1/customer/accounts
+Content-Type: application/json
+Authorization: Basic dmNTRmpSUzd6MG9BaTpWR1BteWl2MzM2JCVd
+
+### Positive test: Retrieves the authenticated user's profile details.
+GET http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+### Positive test: Retrieves the authenticated user's profile details.
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE6dmVyeXNUUm9uZ1Bhc3N3b3JkMzMk
+
+{
+  "name": "New Name1"
+}
