@@ -1,7 +1,6 @@
-package iteration2;
+package iteration2.api;
 
-import iteration1.BaseTest;
-import models.CreateAccountResponse;
+import iteration1.api.BaseTest;
 import models.CreateUserRequest;
 import models.CreateUserResponse;
 import models.UpdateProfileRequest;
@@ -13,8 +12,6 @@ import requests.skeleton.requesters.ValidatedCrudRequester;
 import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
-
-import java.util.List;
 
 public class CustomerManagementTests extends BaseTest {
 
