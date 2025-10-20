@@ -1,16 +1,18 @@
 package iteration1.ui;
 
+import api.requests.steps.AdminSteps;
 import com.codeborne.selenide.*;
-import generators.RandomModelGenerator;
-import io.restassured.specification.RequestSpecification;
-import models.CreateUserRequest;
-import models.CreateUserResponse;
-import models.comparison.ModelAssertions;
+import api.generators.RandomModelGenerator;
+import api.models.CreateUserRequest;
+import api.models.CreateUserResponse;
+import api.models.comparison.ModelAssertions;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Alert;
-import specs.RequestSpecs;
+import api.specs.RequestSpecs;
+import ui.pages.AdminPanel;
+import ui.pages.BankAlert;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -23,48 +25,25 @@ import static io.restassured.RestAssured.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CreateUserTest {
-    @BeforeAll
-    public static void setupSelenoid(){
-        Configuration.remote = "http://localhost:4444/wd/hub";
-        Configuration.baseUrl = "http://192.168.1.16:3000";
-        Configuration.browserSize = "1920x1080";
-        Configuration.pageLoadTimeout = 60000;
-        Configuration.browser = "chrome";
+public class CreateUserTest extends BaseUiTest {
 
-        Configuration.browserCapabilities.setCapability("selenoid:options",
-                Map.of("enableVNC", true, "enableLog", true));
-    }
     @Test
     public void adminCanCreateUserTest() {
         //ШАГ 1: админ залогинился в банке
-        CreateUserRequest admin = CreateUserRequest.builder().username("admin").password("admin").build();
-        Selenide.open("/login");
-        $(Selectors.byAttribute("placeholder", "Username")).sendKeys(admin.getUsername());
-        $(Selectors.byAttribute("placeholder", "Password")).sendKeys(admin.getPassword());
-        $("button").click();
-        $(Selectors.byText("Admin Panel")).shouldBe(visible);
+        CreateUserRequest admin = CreateUserRequest.getAdmin();
+        authAsUser(admin);
         //ШАГ 2: админ создает юзера в банке
-        CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
-        $(Selectors.byAttribute("placeholder", "Username")).sendKeys(newUser.getUsername());
-        $(Selectors.byAttribute("placeholder", "Password")).sendKeys(newUser.getPassword());
-        $(Selectors.byText("Add User")).click();
         //ШАГ 3: проверка, что алерт "✅ User created successfully!"
-        Alert alert = switchTo().alert();
-        assertEquals(alert.getText(),"✅ User created successfully!");
-        alert.accept();
         //ШАГ 4: проверка, что юзер отображается на UI
-        ElementsCollection allUserFromDashboard = $(Selectors.byText("All Users")).parent().findAll("li");
-        allUserFromDashboard.findBy(Condition.exactText(newUser.getUsername() + "\nUSER")).shouldBe(visible);
+        CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
+
+        new AdminPanel().open().createUser(newUser.getUsername(), newUser.getPassword())
+                .checkAlertMessageAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage())
+                .getAllUsers().findBy(Condition.exactText(newUser.getUsername() + "\nUSER")).shouldNotBe(visible);
+
         //ШАГ 5: проверка, что юзер создан на API
-        CreateUserResponse[] users = given()
-                .spec(RequestSpecs.adminSpec())
-                .get("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract().as(CreateUserResponse[].class);
-        CreateUserResponse createdUser = Arrays.stream(users)
+
+        CreateUserResponse createdUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
                 .findFirst().get();
         ModelAssertions.assertThatModels(newUser, createdUser).match();
@@ -72,34 +51,15 @@ public class CreateUserTest {
     @Test
     public void adminCanNotCreateUserWithInvalidDataTest() {
         //ШАГ 1: админ залогинился в банке
-        CreateUserRequest admin = CreateUserRequest.builder().username("admin").password("admin").build();
-        Selenide.open("/login");
-        $(Selectors.byAttribute("placeholder", "Username")).sendKeys(admin.getUsername());
-        $(Selectors.byAttribute("placeholder", "Password")).sendKeys(admin.getPassword());
-        $("button").click();
-        $(Selectors.byText("Admin Panel")).shouldBe(visible);
+        CreateUserRequest admin = CreateUserRequest.getAdmin();
+        authAsUser(admin);
         //ШАГ 2: админ создает юзера в банке
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
-        newUser.setUsername("a");
-        $(Selectors.byAttribute("placeholder", "Username")).sendKeys(newUser.getUsername());
-        $(Selectors.byAttribute("placeholder", "Password")).sendKeys(newUser.getPassword());
-        $(Selectors.byText("Add User")).click();
-        //ШАГ 3: проверка, что алерт "✅ User created successfully!"
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText().contains("Username must be at least 3 and 15 characters"));
-        alert.accept();
-        //ШАГ 4: проверка, что юзер отображается на UI
-        ElementsCollection allUserFromDashboard = $(Selectors.byText("All Users")).parent().findAll("li");
-        allUserFromDashboard.findBy(Condition.exactText(newUser.getUsername() + "\nUSER")).shouldNotBe(exist);
+        new AdminPanel().open().createUser(newUser.getUsername(), newUser.getPassword())
+                .checkAlertMessageAndAccept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CHARACTERS.getMessage())
+                .getAllUsers().findBy(Condition.exactText(newUser.getUsername() + "\nUSER")).shouldNotBe(exist);
         //ШАГ 5: проверка, что юзер создан на API
-        CreateUserResponse[] users = given()
-                .spec(RequestSpecs.adminSpec())
-                .get("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract().as(CreateUserResponse[].class);
-        long usersWithSaneUsernameAsNewUser = Arrays.stream(users)
+        long usersWithSaneUsernameAsNewUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername())).count();
 
         assertThat(usersWithSaneUsernameAsNewUser).isZero();
