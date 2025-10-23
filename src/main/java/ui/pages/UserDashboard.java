@@ -10,6 +10,7 @@ import static com.codeborne.selenide.Selenide.$;
 public class UserDashboard extends BasePage<UserDashboard> {
     private SelenideElement welcomeText = $(Selectors.byClassName("welcome-text"));
     private SelenideElement createNewAccount = $(Selectors.byText("➕ Create New Account"));
+    private SelenideElement depositMoney = $(Selectors.withText("Deposit Money"));
 
     @Override
     public String url() {
@@ -18,6 +19,11 @@ public class UserDashboard extends BasePage<UserDashboard> {
 
     public UserDashboard createNewAccount() {
         createNewAccount.click();
+        return this;
+    }
+
+    public UserDashboard depositMoney() {
+        depositMoney.click();
         return this;
     }
 }
