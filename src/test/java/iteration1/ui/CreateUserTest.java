@@ -44,10 +44,10 @@ public class CreateUserTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CHARACTERS.getMessage())
                 .getAllUsers().stream().noneMatch(userBage -> userBage.getUsername().equals(newUser.getUsername())));
         //ШАГ 5: проверка, что юзер создан на API
-        long usersWithSaneUsernameAsNewUser = AdminSteps.getAllUsers().stream()
+        long usersWithSameUsernameAsNewUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername())).count();
 
-        assertThat(usersWithSaneUsernameAsNewUser).isZero();
+        assertThat(usersWithSameUsernameAsNewUser).isZero();
 
     }
 }
