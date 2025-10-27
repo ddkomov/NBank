@@ -1,5 +1,6 @@
 package iteration2.ui;
 
+import api.generators.RandomData;
 import api.models.CreateAccountResponse;
 import api.models.CreateUserRequest;
 import api.models.CreateUserResponse;
@@ -14,6 +15,7 @@ import ui.pages.TransferPage;
 import ui.pages.UserDashboard;
 
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,6 +24,8 @@ public class UserTransferTest extends BaseUiTest {
     @Test
     @UserSession
     public void userCanTransferValidAmountOfMoney() {
+        //Генерируем случайную сумму депозита (0.1-5000.00) в переменную amount
+        String amount = RandomData.generateRandomAmount();
         //Создаем аккаунт 1
         new UserDashboard().open().createNewAccount();
         //Проверяем, что создался аккаунт 1
@@ -35,19 +39,23 @@ public class UserTransferTest extends BaseUiTest {
                         + createdAccounts1.getFirst().getAccountNumber());
 
         assertThat(createdAccounts1.getFirst().getBalance()).isZero();
-        //Делаем депозит 2000 на аккаунт 1
+        //Делаем депозит amount на аккаунт 1
         new UserDashboard().open().depositMoney()
                 .getPage(DepositMoneyPage.class).selectAccount()
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
-                .enterAmount("2000")//хардкод так как проверяем только одно значение, остальное через апи
+                .enterAmount(amount)
                 .depositButton()
-                .checkAlertMessageAndAccept(BankAlert.DEPOSIT_SUCCESSFULLY.getMessage()
-                        + " $2000 to account " + createdAccounts1.getFirst().getAccountNumber() + "!");//хардкод так как проверяем только одно значение, остальное через апи
-        //Проверяем, что на аккаунте 1 баланс 2000
+                .checkAlertMessageAndAccept(
+                String.format("%s $%s to account %s!",
+                        BankAlert.DEPOSIT_SUCCESSFULLY.getMessage(),
+                        amount,
+                        createdAccounts1.getFirst().getAccountNumber())
+        );
+        //Проверяем, что на аккаунте 1 баланс amount
         List<CreateAccountResponse> createdAccountsAfterDeposit = SessionStorage.getSteps()
                 .getAllAccounts();
 
-        assertThat(createdAccountsAfterDeposit.getFirst().getBalance()).isEqualTo(2000);
+        assertThat(createdAccountsAfterDeposit.getFirst().getBalance()).isEqualTo(Double.parseDouble(amount));
         //Создаем аккаунт 2
         new UserDashboard().open().createNewAccount();
         //Проверяем что создался аккаунт 2
@@ -55,7 +63,7 @@ public class UserTransferTest extends BaseUiTest {
                 .getAllAccounts();
 
         assertThat(createdAccounts2).hasSize(2);
-        //Делаем перевод 2000 с созданного аккаунта 1 на созданный аккаунт 2
+        //Делаем перевод amount с созданного аккаунта 1 на созданный аккаунт 2
         String currentUserUsername = SessionStorage.getSteps().getUsername();
 
         new UserDashboard().makeATransfer()
@@ -63,22 +71,28 @@ public class UserTransferTest extends BaseUiTest {
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
                 .enterRecipientName(currentUserUsername)
                 .enterRecipientAccountNumber(createdAccounts2.get(1).getAccountNumber())
-                .enterAmount("2000")//хардкод так как проверяем только одно значение, остальное через апи
+                .enterAmount(amount)
                 .confirmCheckbox()
                 .sendTransfer()
-                .checkAlertMessageAndAccept(BankAlert.SUCCESSFULLY_TRANSFERRED.getMessage() +
-                        " $2000 to account " + createdAccounts2.get(1).getAccountNumber() + "!");//хардкод так как проверяем только одно значение, остальное через апи
-        //Проверяем, что на аккаунте 2 баланс 2000, а на аккаунте 1 баланс 0
+                .checkAlertMessageAndAccept(
+                        String.format("%s $%s to account %s!",
+                                BankAlert.SUCCESSFULLY_TRANSFERRED.getMessage(),
+                                amount,
+                                createdAccounts2.get(1).getAccountNumber())
+                );
+        //Проверяем, что на аккаунте 2 баланс amount, а на аккаунте 1 баланс 0
         List<CreateAccountResponse> createdAccountsAfterTransfer = SessionStorage.getSteps()
                 .getAllAccounts();
 
         assertThat(createdAccountsAfterTransfer.getFirst().getBalance()).isZero();
-        assertThat(createdAccountsAfterTransfer.get(1).getBalance()).isEqualTo(2000);
+        assertThat(createdAccountsAfterTransfer.get(1).getBalance()).isEqualTo(Double.parseDouble(amount));
     }
 
     @Test
     @UserSession
     public void userCanNotTransferInvalidAmountOfMoney() {
+        //Генерируем случайную сумму депозита (0.1-5000.00) в переменную amount
+        String amount = RandomData.generateRandomAmount();
         //Создаем аккаунт 1
         new UserDashboard().open().createNewAccount();
         //Проверяем, что создался аккаунт 1
@@ -92,19 +106,23 @@ public class UserTransferTest extends BaseUiTest {
                         + createdAccounts1.getFirst().getAccountNumber());
 
         assertThat(createdAccounts1.getFirst().getBalance()).isZero();
-        //Делаем депозит 2000 на аккаунт 1
+        //Делаем депозит amount на аккаунт 1
         new UserDashboard().open().depositMoney()
                 .getPage(DepositMoneyPage.class).selectAccount()
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
-                .enterAmount("2000")//хардкод так как проверяем только одно значение, остальное через апи
+                .enterAmount(amount)
                 .depositButton()
-                .checkAlertMessageAndAccept(BankAlert.DEPOSIT_SUCCESSFULLY.getMessage()
-                        + " $2000 to account " + createdAccounts1.getFirst().getAccountNumber() + "!");//хардкод так как проверяем только одно значение, остальное через апи
-        //Проверяем, что на аккаунте 1 баланс 2000
+                .checkAlertMessageAndAccept(
+                        String.format("%s $%s to account %s!",
+                                BankAlert.DEPOSIT_SUCCESSFULLY.getMessage(),
+                                amount,
+                                createdAccounts1.getFirst().getAccountNumber())
+                );
+        //Проверяем, что на аккаунте 1 баланс amount
         List<CreateAccountResponse> createdAccountsAfterDeposit = SessionStorage.getSteps()
                 .getAllAccounts();
 
-        assertThat(createdAccountsAfterDeposit.getFirst().getBalance()).isEqualTo(2000);
+        assertThat(createdAccountsAfterDeposit.getFirst().getBalance()).isEqualTo(Double.parseDouble(amount));
         //Создаем аккаунт 2
         new UserDashboard().open().createNewAccount();
         //Проверяем что создался аккаунт 2
@@ -120,16 +138,15 @@ public class UserTransferTest extends BaseUiTest {
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
                 .enterRecipientName(currentUserUsername)
                 .enterRecipientAccountNumber(createdAccounts2.get(1).getAccountNumber())
-                .enterAmount("0")//хардкод так как проверяем только одно значение, остальное через апи
+                .enterAmount("0")//остальное через апи
                 .confirmCheckbox()
                 .sendTransfer()
                 .checkAlertMessageAndAccept(BankAlert.INVALID_TRANSFER.getMessage());
-        //Проверяем, что на аккаунте 1 баланс 2000, а на аккаунте 2 баланс 0 (так как не было перевода)
+        //Проверяем, что на аккаунте 1 баланс amount, а на аккаунте 2 баланс 0 (так как не было перевода)
         List<CreateAccountResponse> createdAccountsAfterTransfer = SessionStorage.getSteps()
                 .getAllAccounts();
 
         assertThat(createdAccountsAfterTransfer.getFirst().getBalance()).isZero();
-        assertThat(createdAccountsAfterTransfer.get(1).getBalance()).isEqualTo(2000);
-
+        assertThat(createdAccountsAfterTransfer.get(1).getBalance()).isEqualTo(Double.parseDouble(amount));
     }
 }
