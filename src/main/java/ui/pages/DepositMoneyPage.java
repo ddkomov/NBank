@@ -12,7 +12,6 @@ import static com.codeborne.selenide.Selenide.$;
 public class DepositMoneyPage extends BasePage<DepositMoneyPage> {
     private SelenideElement depositButton = $(Selectors.byXpath("//button[contains(text(),'Deposit')]"));
     private SelenideElement selectAccount = $(Selectors.byXpath("//select[@class='form-control account-selector']"));
-
     private SelenideElement enterAmount = $(Selectors.byXpath("//input[@class='form-control deposit-input']"));
 
 

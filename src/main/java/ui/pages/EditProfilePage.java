@@ -16,8 +16,9 @@ public class EditProfilePage extends BasePage<EditProfilePage>{
         return "/edit-profile";
     }
 
-    public EditProfilePage enterNewName(String newName){
+    public EditProfilePage enterNewName(String newName) throws InterruptedException {
         enterNewName.click();
+        Thread.sleep(1000);
         enterNewName.sendKeys(newName);
         return this;
     }

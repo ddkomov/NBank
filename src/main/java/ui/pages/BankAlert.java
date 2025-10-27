@@ -9,7 +9,9 @@ public enum BankAlert {
     NEW_ACCOUNT_CREATED("✅ New Account Created! Account Number: "),
     DEPOSIT_SUCCESSFULLY("✅ Successfully deposited"),
     PLEASE_ENTER_A_VALID_AMOUNT("❌ Please enter a valid amount."),
-    NAME_UPDATED_SUCCESSFULLY("✅ Name updated successfully!");
+    NAME_UPDATED_SUCCESSFULLY("✅ Name updated successfully!"),
+    SUCCESSFULLY_TRANSFERRED("✅ Successfully transferred"),
+    INVALID_TRANSFER("❌ Error: Invalid transfer: insufficient funds or invalid accounts");
 
     private final String message;
 
