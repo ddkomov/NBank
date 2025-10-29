@@ -53,4 +53,5 @@ public abstract class BasePage<T extends BasePage> {
                          Function<SelenideElement, T> constructor) {
         return elementsCollection.stream().map(constructor).toList();
     }
+
 }

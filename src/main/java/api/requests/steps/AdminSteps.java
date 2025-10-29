@@ -7,6 +7,7 @@ import api.requests.Endpoint;
 import api.requests.skeleton.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import common.storage.SessionStorage;
 
 import java.util.List;
 
