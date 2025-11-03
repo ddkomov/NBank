@@ -13,7 +13,7 @@ import api.requests.steps.AdminSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 
-public class CustomerManagementTests extends BaseTest {
+public class CustomerManagementTest extends BaseTest {
 
     @Test
     public void changeCustomerName() {

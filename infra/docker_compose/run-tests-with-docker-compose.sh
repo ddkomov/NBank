@@ -196,11 +196,12 @@ docker run --rm \
   -v "$TEST_LOGS_DIR":/app/logs \
   nbank-tests:latest \
   mvn test -P api,ui \
-    -DapiBaseUrl="http://backend:4111" \
-    -DuiRemote="http://selenoid:4444/wd/hub" \
-    -DuiBaseUrl="http://nginx" \
-    -DbrowserSize="1920x1080" \
-    -Dbrowser="chrome"
+      -DapiBaseUrl=http://backend:4111 \
+      -DuiRemote=http://selenoid:4444/wd/hub \
+      -DuiBaseUrl=http://nginx \
+      -DbrowserSize=1920x1080 \
+      -Dbrowser=chrome \
+      && mvn surefire-report:report
 
 # === Проверка результата ===
 if [ $? -ne 0 ]; then
