@@ -1,0 +1,64 @@
+services:
+  backend:
+    image: nobugsme/nbank:with_validation_fix
+    ports:
+      - "4111:4111"
+    networks:
+      - nbank-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4111/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    image: nobugsme/nbank-ui:latest
+    expose: # не открываем порт наружу, а даем доступ контейнерам в сети
+      - "80"
+    depends_on:
+      - backend
+    networks:
+      - nbank-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - nbank-network
+
+  selenoid:
+    image: aerokube/selenoid:latest
+    ports:
+      - "4444:4444"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/:/etc/selenoid/:ro
+    command: ["-container-network", "nbank-network"]
+    depends_on:
+      - frontend
+    networks:
+      - nbank-network
+
+  selenoid-ui:
+    image: aerokube/selenoid-ui:latest
+    ports:
+      - "6567:8080"
+    command: ["--selenoid-uri", "http://selenoid:4444"]
+    depends_on:
+      - selenoid
+    networks:
+      - nbank-network
+
+networks:
+  nbank-network:
+    name: nbank-network
