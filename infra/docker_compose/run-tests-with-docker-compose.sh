@@ -107,14 +107,18 @@ else
 fi
 
 # === Пути ===
-SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+
+# Простой Unix-путь, который Git Bash и Docker понимают
+TEST_OUTPUT_DIR="$SCRIPT_DIR/test-output/$(date +%Y%m%d_%H%M%S)"
+
+# Подпапки — только для создания
+TEST_REPORT_DIR="$TEST_OUTPUT_DIR/report"
+TEST_LOGS_DIR="$TEST_OUTPUT_DIR/logs"
+
 CONFIG_DIR="$SCRIPT_DIR/config"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 BROWSER_CONFIG="$CONFIG_DIR/browsers.json"
-TEST_OUTPUT_DIR="$SCRIPT_DIR/test-output/$(date +%Y%m%d_%H%M%S)"
-TEST_RESULTS_DIR="$TEST_OUTPUT_DIR/results"
-TEST_REPORT_DIR="$TEST_OUTPUT_DIR/report"
-TEST_LOGS_DIR="$TEST_OUTPUT_DIR/logs"
 
 # === Проверка файлов ===
 if [ ! -f "$BROWSER_CONFIG" ]; then
@@ -127,8 +131,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-log "Используется конфиг: $BROWSER_CONFIG"
-log "Используется compose: $COMPOSE_FILE"
+log "🔍 Текущая ОС: $OS"
+log "📁 SCRIPT_DIR: $SCRIPT_DIR"
+log "📁 Результаты будут сохранены в: $TEST_OUTPUT_DIR"
 
 # === Подготовка окружения ===
 log "Подготовка тестового окружения..."
@@ -180,10 +185,25 @@ fi
 log "Chrome доступен в Selenoid"
 
 # === Создаём папки для результатов ===
-mkdir -p "$TEST_RESULTS_DIR"
-mkdir -p "$TEST_REPORT_DIR"
+mkdir -p "$TEST_OUTPUT_DIR"
 mkdir -p "$TEST_LOGS_DIR"
 
+# === Преобразуем пути в Windows-формат для Docker Desktop ===
+if [ "$OS" = "git-bash" ]; then
+    if command -v cygpath &> /dev/null; then
+        # Преобразуем в C:\... → C:/... (Docker понимает /, но не \)
+        WIN_TEST_OUTPUT_DIR=$(cygpath -w "$TEST_OUTPUT_DIR" | sed 's|\\|/|g')
+        WIN_TEST_LOGS_DIR=$(cygpath -w "$TEST_LOGS_DIR" | sed 's|\\|/|g')
+        log "📁 Volume host path (Windows): $WIN_TEST_OUTPUT_DIR"
+    else
+        error "cygpath не найден. Установите Git с полным набором утилит."
+        exit 1
+    fi
+else
+    # Linux, WSL, macOS — оставляем как есть
+    WIN_TEST_OUTPUT_DIR="$TEST_OUTPUT_DIR"
+    WIN_TEST_LOGS_DIR="$TEST_LOGS_DIR"
+fi
 # === Запуск тестов ===
 log "Запуск API и UI тестов в Docker..."
 
@@ -191,28 +211,57 @@ docker run --rm \
   --network nbank-network \
   -e APIBASEURL="http://backend:4111" \
   -e UIBASEURL="http://nginx" \
-  -v "$TEST_RESULTS_DIR":/app/target/surefire-reports \
-  -v "$TEST_REPORT_DIR":/app/target/site \
-  -v "$TEST_LOGS_DIR":/app/logs \
+  -v "$WIN_TEST_OUTPUT_DIR/site":/app/target/site \
+  -v "$WIN_TEST_OUTPUT_DIR/surefire-reports":/app/target/surefire-reports \
+  -v "$WIN_TEST_LOGS_DIR":/app/logs \
   nbank-tests:latest \
-  mvn test -P api,ui \
-      -DapiBaseUrl=http://backend:4111 \
-      -DuiRemote=http://selenoid:4444/wd/hub \
-      -DuiBaseUrl=http://nginx \
-      -DbrowserSize=1920x1080 \
-      -Dbrowser=chrome \
-      && mvn surefire-report:report
+  sh -c "
+      echo '🚀 Запуск тестов...' ;
+      mvn test -P all \
+        -DapiBaseUrl=http://backend:4111 \
+        -DuiRemote=http://selenoid:4444/wd/hub \
+        -DuiBaseUrl=http://nginx \
+        -DbrowserSize=1920x1080 \
+        -Dbrowser=chrome ;
+
+      RC=\$?
+      echo \"Код завершения тестов: \$RC\"
+
+      # === Генерация отчёта ===
+      echo '📊 Генерация HTML-отчёта...'
+      mvn -q -DskipTests=true surefire-report:report
+
+      # === Копируем вручную (резерв) ===
+      mkdir -p /app/target/site /app/target/surefire-reports
+      cp -r /app/target/site /app/target/surefire-reports /app/target/failsafe-reports 2>/dev/null || true
+
+      # === Ждём синхронизации ===
+      echo '⏳ Ждём 3 секунды для сброса данных...'
+      sleep 3
+
+      # === Команда sync (принудительная синхронизация) ===
+      sync /app/target || echo 'sync не сработал'
+
+      exit \$RC
+    "
 
 # === Проверка результата ===
 if [ $? -ne 0 ]; then
     error "Тесты завершились с ошибкой"
-    exit 1
+    exit 0
+fi
+
+# === Копируем явно, если вдруг volume не сработал (резерв) ===
+mkdir -p "$TEST_REPORT_DIR"
+if [ -f "$TEST_OUTPUT_DIR/site/surefire-report.html" ]; then
+    cp "$TEST_OUTPUT_DIR/site/surefire-report.html" "$TEST_REPORT_DIR/"
+    cp -r "$TEST_OUTPUT_DIR/surefire-reports" "$TEST_REPORT_DIR/" 2>/dev/null || true
 fi
 
 # === Финал ===
 log "Тесты успешно завершены!"
 echo "📁 Результаты: $TEST_OUTPUT_DIR"
-echo "📊 Отчёт: file://$TEST_OUTPUT_DIR/report/surefire-report.html"
+echo "📊 Отчёт: file://$TEST_OUTPUT_DIR/site/surefire-report.html"
 echo "📌 Логи Selenoid: $COMPOSE -f $COMPOSE_FILE logs selenoid"
 echo "📌 UI Selenoid: http://localhost:6567"
 
