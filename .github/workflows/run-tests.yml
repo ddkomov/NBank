@@ -29,4 +29,4 @@ jobs: #аналог этапов
         run: cd infra/docker_compose && bash restart_docker.sh && cd ../..
 
       - name: Run tests
-        run: ./mvnw clean test
+        run: mvn clean test
