@@ -27,7 +27,7 @@ RUN mvn dependency:go-offline
 # копируем весь проект
 COPY . .
 # собираем проект
-RUN mvn compile
+RUN mvn compile -q
 # теперь внутри есть зависимости, есть весь проект и мы готовы запускать тесты
 
 USER root

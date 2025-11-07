@@ -1,15 +1,27 @@
-name: Run Tests
+name: Run Tests and Deploy Docker Image
 
-#Триггер
-on: [ push, workflow_dispatch ]
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'pom.xml'
+      - 'infra/**'
+  workflow_dispatch:
 
-jobs: #аналог этапов
+jobs:
   run-tests:
-    name: Set up services (reviw apps) and run tests
+    name: Run Tests
     runs-on: ubuntu-latest
-    steps: #шаги отдельной джобы
-      - name: Checkout repository #копируем файлы репозитория внутрь CI агента
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Extract commit hash
+        id: vars
+        run: echo "COMMIT_SHA_SHORT=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -22,7 +34,7 @@ jobs: #аналог этапов
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: | 
+          restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Set up services
@@ -33,3 +45,35 @@ jobs: #аналог этапов
         env:
           APIBASEURL: http://localhost:4111
           UIBASEURL: http://frontend
+
+  build-and-push:
+    name: Build and Push Docker Image
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Extract commit hash
+        id: vars
+        run: echo "COMMIT_SHA_SHORT=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/nbank-tests:${{ steps.vars.outputs.COMMIT_SHA_SHORT }}
