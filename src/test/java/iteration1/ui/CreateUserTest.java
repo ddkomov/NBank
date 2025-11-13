@@ -8,29 +8,42 @@ import api.models.CreateUserResponse;
 import api.models.comparison.ModelAssertions;
 import common.annotations.AdminSession;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import ui.pages.AdminPanel;
 import ui.pages.BankAlert;
+import ui.pages.BasePage;
+
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class CreateUserTest extends BaseUiTest {
 
+
     @Test
     @AdminSession
     public void adminCanCreateUserTest() {
-
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
 
-        assertTrue(new AdminPanel().open().createUser(newUser.getUsername(), newUser.getPassword())
-                .checkAlertMessageAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage())
-                .getAllUsers().stream()
+        AdminPanel adminPanel = new AdminPanel().open();
+        adminPanel.createUser(newUser.getUsername(), newUser.getPassword())
+                .checkAlertMessageAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage());
+
+        // ✅ Исправлено: используем WebDriverRunner
+        WebDriverWait wait = new WebDriverWait(WebDriverRunner.getWebDriver(), Duration.ofSeconds(10));
+        wait.until(driver -> adminPanel.getAllUsers().stream()
                 .anyMatch(userBage -> userBage.getUsername().equals(newUser.getUsername())));
 
-        //ШАГ 5: проверка, что юзер создан на API
+        // Проверка
+        assertTrue(adminPanel.getAllUsers().stream()
+                .anyMatch(userBage -> userBage.getUsername().equals(newUser.getUsername())));
+
+        // API проверка
         CreateUserResponse createdUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
-                .findFirst().get();
+                .findFirst().orElseThrow();
         ModelAssertions.assertThatModels(newUser, createdUser).match();
     }
     @Test
