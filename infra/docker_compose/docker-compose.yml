@@ -20,7 +20,7 @@ services:
     networks:
       - nbank-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost" ]
+      test: [ "CMD", "curl", "-f", "http://frontend" ]
       interval: 10s
       timeout: 5s
       retries: 10
