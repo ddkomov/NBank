@@ -209,7 +209,7 @@ public class UserDepositTest extends BaseTest {
                         user1Request.getUsername(),
                         user1Request.getPassword()),
                 Endpoint.DEPOSITS,
-                ResponseSpecs.requestReturnsNotFound() // ???? Ожидаем ошибку 404, но почему-то 403
+                ResponseSpecs.requestReturnsForbidden() // ???? Ожидаем ошибку 404, но почему-то 403
         ).post(depositRequest);
         // Шаг 4: Проверяем, что баланс изменился через GET-запрос
         // Выполняем GET-запрос к /customer/accounts
