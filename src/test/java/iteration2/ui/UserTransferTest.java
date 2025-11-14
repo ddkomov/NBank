@@ -138,10 +138,10 @@ public class UserTransferTest extends BaseUiTest {
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
                 .enterRecipientName(currentUserUsername)
                 .enterRecipientAccountNumber(createdAccounts2.get(1).getAccountNumber())
-                .enterAmount("0")//остальное через апи
+                .enterAmount("100000")//остальное через апи
                 .confirmCheckbox()
                 .sendTransfer()
-                .checkAlertMessageAndAccept(BankAlert.INVALID_TRANSFER.getMessage());
+                .checkAlertMessageAndAccept(BankAlert.TRANSFER_AMOUNT_CANNOT_EXCEED_10000.getMessage());
         //Проверяем, что на аккаунте 1 баланс amount, а на аккаунте 2 баланс 0 (так как не было перевода)
         List<CreateAccountResponse> createdAccountsAfterTransfer = SessionStorage.getSteps()
                 .getAllAccounts();

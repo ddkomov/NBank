@@ -11,7 +11,7 @@ public enum BankAlert {
     PLEASE_ENTER_A_VALID_AMOUNT("❌ Please enter a valid amount."),
     NAME_UPDATED_SUCCESSFULLY("✅ Name updated successfully!"),
     SUCCESSFULLY_TRANSFERRED("✅ Successfully transferred"),
-    INVALID_TRANSFER("❌ Error: Invalid transfer: insufficient funds or invalid accounts");
+    TRANSFER_AMOUNT_CANNOT_EXCEED_10000("❌ Error: Transfer amount cannot exceed 10000");
 
     private final String message;
 
