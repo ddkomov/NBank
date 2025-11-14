@@ -146,7 +146,7 @@ $COMPOSE -f "$COMPOSE_FILE" down --remove-orphans || warn "Контейнеры 
 log "Запуск Docker Compose (Selenoid + app)..."
 $COMPOSE -f "$COMPOSE_FILE" up -d
 
-# === Ожидание готовности backend и nginx ===
+# === Ожидание готовности backend и frontend ===
 log "Ожидание готовности backend (http://localhost:4111/actuator/health)..."
 for i in {1..30}; do
     if curl -s http://localhost:4111/actuator/health | grep -q '"status":"UP"'; then
@@ -156,10 +156,10 @@ for i in {1..30}; do
     sleep 2
 done
 
-log "Ожидание готовности nginx (http://localhost/)..."
+log "Ожидание готовности frontend (http://frontend/)..."
 for i in {1..10}; do
-    if curl -s -f http://localhost/ &>/dev/null; then
-        log "Nginx готов"
+    if curl -s -f http://frontend/ &>/dev/null; then
+        log "frontend готов"
         break
     fi
     sleep 2
@@ -210,7 +210,7 @@ log "Запуск API и UI тестов в Docker..."
 docker run --rm \
   --network nbank-network \
   -e APIBASEURL="http://backend:4111" \
-  -e UIBASEURL="http://nginx" \
+  -e UIBASEURL="http://frontend" \
   -v "$WIN_TEST_OUTPUT_DIR/site":/app/target/site \
   -v "$WIN_TEST_OUTPUT_DIR/surefire-reports":/app/target/surefire-reports \
   -v "$WIN_TEST_LOGS_DIR":/app/logs \
@@ -220,7 +220,7 @@ docker run --rm \
       mvn test -P all \
         -DapiBaseUrl=http://backend:4111 \
         -DuiRemote=http://selenoid:4444/wd/hub \
-        -DuiBaseUrl=http://nginx \
+        -DuiBaseUrl=http://frontend \
         -DbrowserSize=1920x1080 \
         -Dbrowser=chrome ;
 
