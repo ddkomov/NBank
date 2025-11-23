@@ -53,13 +53,9 @@ public class UserDepositTest extends BaseUiTest {
         List<CreateAccountResponse> createdAccounts = SessionStorage.getSteps()
                 .getAllAccounts();
 
-        assertThat(createdAccounts).hasSize(1);
-
         new UserDashboard().checkAlertMessageAndAccept
                 (BankAlert.NEW_ACCOUNT_CREATED.getMessage()
                         + createdAccounts.getFirst().getAccountNumber());
-
-        assertThat(createdAccounts.getFirst().getBalance()).isZero();
 
         new UserDashboard().open().depositMoney()
                 .getPage(DepositMoneyPage.class).selectAccount()

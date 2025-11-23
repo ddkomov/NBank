@@ -5,6 +5,7 @@ import api.requests.Endpoint;
 import api.requests.skeleton.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import common.helpers.StepLogger;
 import lombok.Getter;
 
 import java.util.List;
@@ -19,12 +20,14 @@ public class UserSteps {
         this.password = password;
     }
 
-    public List<CreateAccountResponse> getAllAccounts(){
-        return new ValidatedCrudRequester<CreateAccountResponse>(
-                RequestSpecs.authAsUser(username, password),
-                Endpoint.CUSTOMERS_ACCOUNT,
-                ResponseSpecs.requestReturnsOK()).getAll(CreateAccountResponse[].class);
+    public List<CreateAccountResponse> getAllAccounts() {
+        return StepLogger.log("User " + username + " is getting all accounts", () -> {
+            return new ValidatedCrudRequester<CreateAccountResponse>(
+                    RequestSpecs.authAsUser(username, password),
+                    Endpoint.CUSTOMERS_ACCOUNT,
+                    ResponseSpecs.requestReturnsOK()).getAll(CreateAccountResponse[].class);
 
+        });
     }
 
 }
