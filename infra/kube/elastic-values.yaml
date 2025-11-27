@@ -1,0 +1,47 @@
+# elastic-values.yaml
+
+# ✅ ОБЯЗАТЕЛЬНО: singleNode
+singleNode: true
+
+# replicas (на всякий случай)
+replicas: 1
+
+# Отключаем storage
+persistence:
+  enabled: false
+
+# НЕ нужно задавать discovery.type — чарт сделает сам
+# НЕ нужно отключать xpack.security — чарт сделает сам
+
+esJavaOpts: "-Xms512m -Xmx512m"
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "500m"
+  limits:
+    memory: "1.5Gi"
+    cpu: "1000m"
+
+# Инициализация vm.max_map_count
+initContainers:
+  - name: configure-sysctl
+    image: busybox:1.35
+    command:
+      - sysctl
+      - -w
+      - vm.max_map_count=262144
+    securityContext:
+      privileged: true
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+
+containerSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+
+kibana:
+  enabled: false

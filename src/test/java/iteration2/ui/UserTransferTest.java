@@ -5,6 +5,7 @@ import api.models.CreateAccountResponse;
 import api.models.CreateUserRequest;
 import api.models.CreateUserResponse;
 import api.requests.steps.AdminSteps;
+import api.utils.AccountUtils;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.ui.BaseUiTest;
@@ -15,6 +16,7 @@ import ui.pages.TransferPage;
 import ui.pages.UserDashboard;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,6 +98,9 @@ public class UserTransferTest extends BaseUiTest {
         //Проверяем, что создался аккаунт 1
         List<CreateAccountResponse> createdAccounts1 = SessionStorage.getSteps()
                 .getAllAccounts();
+
+        long createdAccountId1 = createdAccounts1.getFirst().getId();
+
         //Проверяем, что на аккаунте 1 баланс 0
         new UserDashboard().checkAlertMessageAndAccept
                 (BankAlert.NEW_ACCOUNT_CREATED.getMessage()
@@ -125,15 +130,17 @@ public class UserTransferTest extends BaseUiTest {
         List<CreateAccountResponse> createdAccounts2 = SessionStorage.getSteps()
                 .getAllAccounts();
 
+        long createdAccountId2 = createdAccountId1 + 1;
+
         assertThat(createdAccounts2).hasSize(2);
-        //Делаем перевод 0 с созданного аккаунта 1 на созданный аккаунт 2
+        //Делаем перевод 100000 с созданного аккаунта 1 на созданный аккаунт 2
         String currentUserUsername = SessionStorage.getSteps().getUsername();
 
         new UserDashboard().makeATransfer()
                 .getPage(TransferPage.class).selectAccount()
                 .chooseAccount(createdAccounts1.getFirst().getAccountNumber())
                 .enterRecipientName(currentUserUsername)
-                .enterRecipientAccountNumber(createdAccounts2.get(1).getAccountNumber())
+                .enterRecipientAccountNumber("ACC" + createdAccountId2)
                 .enterAmount("100000")//остальное через апи
                 .confirmCheckbox()
                 .sendTransfer()
@@ -141,8 +148,14 @@ public class UserTransferTest extends BaseUiTest {
         //Проверяем, что на аккаунте 1 баланс amount, а на аккаунте 2 баланс 0 (так как не было перевода)
         List<CreateAccountResponse> createdAccountsAfterTransfer = SessionStorage.getSteps()
                 .getAllAccounts();
-        //флакает так как объекты json выводятся в случайном порядке, нет сортировки по id счета
-        assertThat(createdAccountsAfterTransfer.getFirst().getBalance()).isZero();
-        assertThat(createdAccountsAfterTransfer.get(1).getBalance()).isEqualTo(Double.parseDouble(amount));
+
+        Optional<CreateAccountResponse> fromAccount = AccountUtils.getById(createdAccountsAfterTransfer, createdAccountId1);
+        Optional<CreateAccountResponse> toAccount = AccountUtils.getById(createdAccountsAfterTransfer, createdAccountId2);
+
+        assertThat(fromAccount).isPresent();
+        assertThat(toAccount).isPresent();
+
+        assertThat(toAccount.get().getBalance()).isZero();
+        assertThat(fromAccount.get().getBalance()).isEqualTo(Double.parseDouble(amount));
     }
 }

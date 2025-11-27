@@ -12,7 +12,7 @@ services:
       retries: 10
 
   frontend:
-    image: nobugsme/nbank-ui:latest
+    image: nobugsme/nbank-ui:with_nginx
     expose: # не открываем порт наружу, а даем доступ контейнерам в сети
       - "3000:80"
     depends_on:
