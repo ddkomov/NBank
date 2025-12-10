@@ -1,0 +1,40 @@
+# Global settings
+imagePullPolicy: IfNotPresent
+replicaCount: 1
+
+# Services configuration
+backend:
+  replicaCount: 1
+  image: nobugsme/nbank:with_validation_fix
+  service:
+    type: NodePort
+    port: 4111
+    targetPort: 4111
+    nodePort: 30411
+
+frontend:
+  replicaCount: 1
+  image: nobugsme/nbank-ui:with_nginx
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+
+selenoid:
+  replicaCount: 1
+  image: aerokube/selenoid:latest
+  service:
+    type: NodePort
+    port: 4444
+    targetPort: 4444
+    nodePort: 30444
+
+selenoidUi:
+  replicaCount: 1
+  image: aerokube/selenoid-ui:latest
+  service:
+    type: NodePort
+    port: 8080
+    targetPort: 8080
+    nodePort: 30808
