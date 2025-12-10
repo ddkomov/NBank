@@ -1,9 +1,10 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: spring-bank-monitor
+  name: nbank-backend-monitor
   namespace: monitoring
   labels:
+    app: nbank-backend
     release: monitoring
 spec:
   selector:
@@ -15,7 +16,7 @@ spec:
   endpoints:
     - port: http
       path: /actuator/prometheus
-      interval: 15s
+      interval: 30s
       basicAuth:
         username:
           name: backend-basic-auth
@@ -23,3 +24,19 @@ spec:
         password:
           name: backend-basic-auth
           key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-metrics
+  namespace: default
+  labels:
+    app: backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: http
+      port: 4111
+      targetPort: 4111
+      protocol: TCP
