@@ -1,5 +1,6 @@
 package api.models;
 
+import api.requests.skeleton.interfaces.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountResponse extends BaseModel {
+public class AccountResponse extends BaseModel implements Identifiable {
     private long id;
     private String accountNumber;
     private double balance;

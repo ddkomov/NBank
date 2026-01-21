@@ -1,0 +1,46 @@
+# Kibana configuration for NBank logging
+elasticsearchHosts: "https://elasticsearch-master:9200"
+elasticsearchCertificateSecret: elasticsearch-master-certs
+elasticsearchCertificateAuthoritiesFile: ca.crt
+elasticsearchCredentialSecret: elasticsearch-master-credentials
+
+# Service configuration
+service:
+  type: NodePort
+  nodePort: 30601
+
+# Resource limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+# Kibana configuration
+kibanaConfig:
+  kibana.yml: |
+    server.host: 0.0.0.0
+    elasticsearch.hosts: ["https://elasticsearch-master:9200"]
+    elasticsearch.username: "kibana_system"
+    elasticsearch.ssl.certificateAuthorities: /usr/share/kibana/config/certs/ca.crt
+    elasticsearch.ssl.verificationMode: certificate
+
+# Health check configuration
+healthCheckPath: "/app/kibana"
+
+# Lifecycle configuration
+lifecycle:
+  postStart:
+    exec:
+      command:
+        - bash
+        - -c
+        - |
+          #!/bin/bash
+          # Wait for Elasticsearch to be ready
+          until curl -s -k -u elastic:admin https://elasticsearch-master:9200/_cluster/health; do
+            echo "Waiting for Elasticsearch..."
+            sleep 10
+          done
